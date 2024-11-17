@@ -1,17 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_screen.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
-
-  // Default email and password for login
-  final String defaultEmail = 'ss@gmail.com';
-  final String defaultPassword = 'ss';
-
   @override
   Widget build(BuildContext context) {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
+
+    // Function to handle login using Firebase Authentication
+    Future<void> _login(BuildContext context) async {
+      try {
+        // Authenticate the user with email and password
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+
+        // Navigate to the ChatScreen upon successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ChatScreen()),
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } on FirebaseAuthException catch (e) {
+        // Show error messages for authentication failures
+        String errorMessage;
+        if (e.code == 'user-not-found') {
+          errorMessage = 'No user found for this email.';
+        } else if (e.code == 'wrong-password') {
+          errorMessage = 'Incorrect password. Please try again.';
+        } else {
+          errorMessage = e.message ?? 'An unexpected error occurred.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } catch (e) {
+        // Catch any other errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('An error occurred: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -117,23 +163,7 @@ class LoginPage extends StatelessWidget {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    // Check if the entered email and password match the default values
-                    if (emailController.text == defaultEmail &&
-                        passwordController.text == defaultPassword) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const ChatScreen()),
-                      );
-                    } else {
-                      // Show an error message if login details are incorrect
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Invalid email or password'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
+                    _login(context); // Call the Firebase login function
                   },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.deepPurple,

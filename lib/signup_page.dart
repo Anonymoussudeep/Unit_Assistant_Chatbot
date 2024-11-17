@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:country_picker/country_picker.dart';
 import 'chat_screen.dart';
 
@@ -22,10 +24,10 @@ class _SignupPageState extends State<SignupPage> {
   bool _isTermsAccepted = false;
   String _countryCode = '+1'; // Default country code
 
-  // Uncomment the following line if using Firebase
-  // final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance; // FirebaseAuth instance
 
-  void _signUp() async {
+  // Function to handle user signup and save to Firestore
+  Future<void> _signUp() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
@@ -51,13 +53,27 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
-    // Firebase signup logic (commented out for now)
-    /*
     try {
-      await _auth.createUserWithEmailAndPassword(
+      // Sign up the user using Firebase Authentication
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
+
+      // Get the UID of the created user
+      String uid = userCredential.user!.uid;
+
+      // Save user details to Firestore
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'uid': uid,
+        'full_name': _nameController.text,
+        'email': _emailController.text,
+        'mobile': '$_countryCode${_mobileController.text}',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      // Navigate to the ChatScreen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const ChatScreen()),
@@ -76,21 +92,14 @@ class _SignupPageState extends State<SignupPage> {
           backgroundColor: Colors.red,
         ),
       );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-    */
-
-    // For testing without Firebase, directly navigate to ChatScreen
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const ChatScreen()),
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Account created successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
   }
 
   @override

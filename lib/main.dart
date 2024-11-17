@@ -25,7 +25,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const LandingPage(),
+      home:
+          const LandingPage(), // Ensure this navigates to the proper initial page
       debugShowCheckedModeBanner: false, // Removes the debug banner
     );
   }
